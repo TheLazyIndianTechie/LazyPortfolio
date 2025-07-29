@@ -1,0 +1,49 @@
+name: Acquire Unity License Activation File
+
+on:
+  workflow_dispatch:
+
+jobs:
+  activation:
+    name: Request manual activation file 🔑
+    runs-on: ubuntu-latest
+    steps:
+      # Request manual activation file
+      - name: Request manual activation file
+        id: getManualLicenseFile
+        uses: game-ci/unity-request-activation-file@v2
+        with:
+          unityVersion: 6000.1.5f1
+          
+      # Upload artifact (Unity_v6000.x.alf)
+      - name: Expose as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.getManualLicenseFile.outputs.filePath }}
+          path: ${{ steps.getManualLicenseFile.outputs.filePath }}
+          
+      - name: Instructions
+        run: |
+          echo "## 📋 Next Steps to Activate Unity License"
+          echo ""
+          echo "1. Download the artifact from this workflow run (Unity_v6000.x.alf file)"
+          echo "2. Visit https://license.unity3d.com/manual"
+          echo "3. Upload the .alf file and sign in with your Unity account"
+          echo "4. Choose 'Unity Personal' license type"
+          echo "5. Download the resulting .ulf license file"
+          echo ""
+          echo "## 🔐 Add License to GitHub Secrets"
+          echo ""
+          echo "1. Open the downloaded .ulf file in a text editor"
+          echo "2. Copy ALL contents of the file"
+          echo "3. Go to: https://github.com/${{ github.repository }}/settings/secrets/actions"
+          echo "4. Click 'New repository secret'"
+          echo "5. Add these secrets:"
+          echo "   - Name: UNITY_LICENSE"
+          echo "     Value: [Paste the entire .ulf file contents]"
+          echo "   - Name: UNITY_EMAIL"
+          echo "     Value: [Your Unity account email]"
+          echo "   - Name: UNITY_PASSWORD"
+          echo "     Value: [Your Unity account password]"
+          echo ""
+          echo "Once complete, you can run the 'Unity Build (GameCI)' workflow!"
