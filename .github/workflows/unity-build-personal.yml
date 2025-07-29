@@ -23,7 +23,7 @@ jobs:
           unityVersion: 6000.1.5f1
 
       - name: Upload activation file
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Manual-Activation-File
           path: ${{ steps.getManualLicenseFile.outputs.filePath }}
@@ -59,7 +59,7 @@ jobs:
           lfs: true
       
       - name: Cache Library folder
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: Library
           key: Library-${{ matrix.targetPlatform }}-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
@@ -84,7 +84,7 @@ jobs:
           allowDirtyBuild: true
       
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Build-${{ matrix.targetPlatform }}
           path: build/${{ matrix.targetPlatform }}
@@ -99,7 +99,7 @@ jobs:
       
       - name: Upload WebGL to GitHub Pages artifact
         if: matrix.targetPlatform == 'WebGL'
-        uses: actions/upload-pages-artifact@v2
+        uses: actions/upload-pages-artifact@v3
         with:
           path: public
 
@@ -117,4 +117,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v3
+        uses: actions/deploy-pages@v4
