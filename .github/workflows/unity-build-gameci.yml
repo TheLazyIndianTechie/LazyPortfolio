@@ -61,36 +61,51 @@ jobs:
       - name: Fix WebGL files for GitHub Pages
         if: matrix.targetPlatform == 'WebGL'
         run: |
-          # Install brotli
-          sudo apt-get update
-          sudo apt-get install -y brotli
+          # Install brotli if not already installed
+          which brotli || sudo apt-get update && sudo apt-get install -y brotli
           
+          # Navigate to build directory
           cd build/WebGL/LazyPortfolio/Build
+          
+          # Create a temporary directory for decompressed files
+          mkdir -p decompressed
           
           # Decompress .br files
           for file in *.br; do
             if [ -f "$file" ]; then
-              echo "Decompressing $file"
-              brotli -d "$file"
-              rm "$file"
+              base_name="${file%.br}"
+              echo "Decompressing $file to decompressed/$base_name"
+              brotli -d "$file" -o "decompressed/$base_name"
             fi
           done
           
           # Decompress .gz files if any
           for file in *.gz; do
             if [ -f "$file" ]; then
-              echo "Decompressing $file"
-              gunzip "$file"
+              base_name="${file%.gz}"
+              echo "Decompressing $file to decompressed/$base_name"
+              gunzip -c "$file" > "decompressed/$base_name"
             fi
           done
           
-          # Update the loader script to not expect compressed files
-          if [ -f "../LazyPortfolio.loader.js" ]; then
-            sed -i 's/\.br"/"/' ../LazyPortfolio.loader.js
-            sed -i 's/\.gz"/"/' ../LazyPortfolio.loader.js
+          # Move decompressed files back, removing compressed versions
+          if [ -d "decompressed" ] && [ "$(ls -A decompressed)" ]; then
+            mv decompressed/* .
+            rm -rf decompressed
+            rm -f *.br *.gz
           fi
           
-          cd ../../../../
+          # Update the loader script to not expect compressed files
+          cd ..
+          if [ -f "LazyPortfolio.loader.js" ]; then
+            # Remove .br and .gz extensions from the loader
+            sed -i 's/\.br"/"/' LazyPortfolio.loader.js
+            sed -i 's/\.gz"/"/' LazyPortfolio.loader.js
+            sed -i 's/\.br,/,/' LazyPortfolio.loader.js
+            sed -i 's/\.gz,/,/' LazyPortfolio.loader.js
+          fi
+          
+          cd ../../../
       
       # Prepare WebGL for GitHub Pages
       - name: Prepare WebGL build for Pages
@@ -143,8 +158,6 @@ jobs:
                   companyName: "LazyGameDevs",
                   productName: "LazyPortfolio",
                   productVersion: "1.0",
-                  // matchWebGLToCanvasSize: false, // Uncomment this to separately control WebGL canvas render size and DOM element size.
-                  // devicePixelRatio: 1, // Uncomment this to override low DPI rendering on high DPI displays.
                 });
               </script>
             </body>
