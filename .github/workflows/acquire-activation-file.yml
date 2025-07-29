@@ -3,6 +3,10 @@ name: Acquire Unity License Activation File
 on:
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   activation:
     name: Request manual activation file 🔑
