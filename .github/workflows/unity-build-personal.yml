@@ -8,39 +8,6 @@ on:
   workflow_dispatch:
 
 jobs:
-  acquire-activation-file:
-    name: Acquire Unity Activation File
-    runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch'
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Create activation file
-        uses: game-ci/unity-request-activation-file@v2
-        id: getManualLicenseFile
-        with:
-          unityVersion: 6000.1.5f1
-
-      - name: Upload activation file
-        uses: actions/upload-artifact@v4
-        with:
-          name: Manual-Activation-File
-          path: ${{ steps.getManualLicenseFile.outputs.filePath }}
-          retention-days: 1
-
-      - name: Information
-        run: |
-          echo "### Manual Activation Required! ###"
-          echo ""
-          echo "1. Download the Manual-Activation-File artifact from this workflow run"
-          echo "2. Visit https://license.unity3d.com/manual"
-          echo "3. Upload the .alf file and sign in with your Unity account"
-          echo "4. For Personal license, you'll need to use Unity's automatic activation"
-          echo ""
-          echo "Alternative: Use Unity Personal Edition activation in CI"
-          echo "See: https://game.ci/docs/github/activation"
-
   build-with-personal:
     name: Build with Unity Personal
     runs-on: ubuntu-latest
@@ -67,20 +34,18 @@ jobs:
             Library-${{ matrix.targetPlatform }}-
             Library-
       
-      # For Personal License, we need to use Unity's activation
-      - name: Unity - Activate
-        uses: game-ci/unity-activate@v2
-        with:
-          unityVersion: 6000.1.5f1
-      
+      # Use the latest Unity Builder which handles Unity 6
       - name: Build Unity project
         uses: game-ci/unity-builder@v4
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
         with:
           targetPlatform: ${{ matrix.targetPlatform }}
-          unityVersion: 6000.1.5f1
+          unityVersion: 6000.0.32f1  # Use the closest available version
           buildName: LazyPortfolio
           buildsPath: build
-          # Personal license doesn't require UNITY_LICENSE secret
           allowDirtyBuild: true
       
       - name: Upload build artifacts
