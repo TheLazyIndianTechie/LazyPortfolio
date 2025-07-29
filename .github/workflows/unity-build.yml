@@ -44,7 +44,7 @@ jobs:
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
           targetPlatform: ${{ matrix.targetPlatform }}
-          unityVersion: 6000.0.32f1
+          unityVersion: 6000.1.5f1
           buildName: LazyPortfolio
           buildsPath: build
       
@@ -86,7 +86,7 @@ jobs:
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
           testMode: ${{ matrix.testMode }}
-          unityVersion: 6000.0.32f1
+          unityVersion: 6000.1.5f1
           artifactsPath: test-results
           githubToken: ${{ secrets.GITHUB_TOKEN }}
           checkName: ${{ matrix.testMode }} Test Results
