@@ -57,6 +57,41 @@ jobs:
           path: build/${{ matrix.targetPlatform }}
           retention-days: 30
       
+      # Fix WebGL compression issue for GitHub Pages
+      - name: Fix WebGL files for GitHub Pages
+        if: matrix.targetPlatform == 'WebGL'
+        run: |
+          # Install brotli
+          sudo apt-get update
+          sudo apt-get install -y brotli
+          
+          cd build/WebGL/LazyPortfolio/Build
+          
+          # Decompress .br files
+          for file in *.br; do
+            if [ -f "$file" ]; then
+              echo "Decompressing $file"
+              brotli -d "$file"
+              rm "$file"
+            fi
+          done
+          
+          # Decompress .gz files if any
+          for file in *.gz; do
+            if [ -f "$file" ]; then
+              echo "Decompressing $file"
+              gunzip "$file"
+            fi
+          done
+          
+          # Update the loader script to not expect compressed files
+          if [ -f "../LazyPortfolio.loader.js" ]; then
+            sed -i 's/\.br"/"/' ../LazyPortfolio.loader.js
+            sed -i 's/\.gz"/"/' ../LazyPortfolio.loader.js
+          fi
+          
+          cd ../../../../
+      
       # Prepare WebGL for GitHub Pages
       - name: Prepare WebGL build for Pages
         if: matrix.targetPlatform == 'WebGL' && github.ref == 'refs/heads/main'
@@ -69,6 +104,53 @@ jobs:
           
           # Create .nojekyll file to enable serving of files starting with underscore
           touch public/.nojekyll
+          
+          # Create a simple index.html if it doesn't exist
+          if [ ! -f public/index.html ]; then
+            cat > public/index.html << 'HTML'
+          <!DOCTYPE html>
+          <html lang="en-us">
+            <head>
+              <meta charset="utf-8">
+              <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+              <title>LazyPortfolio</title>
+              <link rel="shortcut icon" href="TemplateData/favicon.ico">
+              <link rel="stylesheet" href="TemplateData/style.css">
+            </head>
+            <body>
+              <div id="unity-container" class="unity-desktop">
+                <canvas id="unity-canvas" width=960 height=600></canvas>
+                <div id="unity-loading-bar">
+                  <div id="unity-logo"></div>
+                  <div id="unity-progress-bar-empty">
+                    <div id="unity-progress-bar-full"></div>
+                  </div>
+                </div>
+                <div id="unity-warning"> </div>
+                <div id="unity-footer">
+                  <div id="unity-webgl-logo"></div>
+                  <div id="unity-fullscreen-button"></div>
+                  <div id="unity-build-title">LazyPortfolio</div>
+                </div>
+              </div>
+              <script src="Build/LazyPortfolio.loader.js"></script>
+              <script>
+                createUnityInstance(document.querySelector("#unity-canvas"), {
+                  dataUrl: "Build/LazyPortfolio.data",
+                  frameworkUrl: "Build/LazyPortfolio.framework.js",
+                  codeUrl: "Build/LazyPortfolio.wasm",
+                  streamingAssetsUrl: "StreamingAssets",
+                  companyName: "LazyGameDevs",
+                  productName: "LazyPortfolio",
+                  productVersion: "1.0",
+                  // matchWebGLToCanvasSize: false, // Uncomment this to separately control WebGL canvas render size and DOM element size.
+                  // devicePixelRatio: 1, // Uncomment this to override low DPI rendering on high DPI displays.
+                });
+              </script>
+            </body>
+          </html>
+          HTML
+          fi
       
       # Upload Pages artifact
       - name: Upload Pages artifact
