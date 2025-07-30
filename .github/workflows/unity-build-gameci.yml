@@ -125,11 +125,46 @@ jobs:
           # Update the loader script to not expect compressed files
           cd ..
           if [ -f "LazyPortfolio.loader.js" ]; then
-            # Remove .br and .gz extensions from the loader
-            sed -i 's/\.br"/"/' LazyPortfolio.loader.js
-            sed -i 's/\.gz"/"/' LazyPortfolio.loader.js
-            sed -i 's/\.br,/,/' LazyPortfolio.loader.js
-            sed -i 's/\.gz,/,/' LazyPortfolio.loader.js
+            echo "Updating loader script to remove compression references..."
+            
+            # Create a backup
+            cp LazyPortfolio.loader.js LazyPortfolio.loader.js.bak
+            
+            # More aggressive approach - modify the actual URL construction in the loader
+            # This replaces the file extension addition in the Unity loader
+            sed -i 's/"\.br"/""/g' LazyPortfolio.loader.js
+            sed -i 's/"\.gz"/""/g' LazyPortfolio.loader.js
+            sed -i 's/\.br"/"/g' LazyPortfolio.loader.js
+            sed -i 's/\.gz"/"/g' LazyPortfolio.loader.js
+            
+            # Replace any concatenation of .br or .gz extensions
+            sed -i 's/+"\.br"//g' LazyPortfolio.loader.js
+            sed -i 's/+"\.gz"//g' LazyPortfolio.loader.js
+            
+            # Handle cases where the extension might be in the URL construction
+            sed -i 's/\.framework\.js\.br/\.framework\.js/g' LazyPortfolio.loader.js
+            sed -i 's/\.data\.br/\.data/g' LazyPortfolio.loader.js
+            sed -i 's/\.wasm\.br/\.wasm/g' LazyPortfolio.loader.js
+            sed -i 's/\.framework\.js\.gz/\.framework\.js/g' LazyPortfolio.loader.js
+            sed -i 's/\.data\.gz/\.data/g' LazyPortfolio.loader.js
+            sed -i 's/\.wasm\.gz/\.wasm/g' LazyPortfolio.loader.js
+            
+            # Also update the index.html if it exists
+            if [ -f "index.html" ]; then
+              sed -i 's/\.br"//g' index.html
+              sed -i 's/\.gz"//g' index.html
+              sed -i 's/\.framework\.js\.br/\.framework\.js/g' index.html
+              sed -i 's/\.data\.br/\.data/g' index.html
+              sed -i 's/\.wasm\.br/\.wasm/g' index.html
+            fi
+            
+            # Show the differences
+            echo "Changes made to loader:"
+            diff -u LazyPortfolio.loader.js.bak LazyPortfolio.loader.js || true
+            
+            # Debug: Check if replacements were made
+            echo "Checking for remaining .br references:"
+            grep -c "\.br" LazyPortfolio.loader.js || echo "No .br references found"
           fi
           
           cd ../../../

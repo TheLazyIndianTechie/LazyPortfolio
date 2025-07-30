@@ -216,3 +216,8 @@ ENV/
 
 # Unity specific for this project
 # Add any project-specific ignores below this line
+
+# GitHub Actions artifacts
+artifact.tar
+*.tar.gz
+*.zip
