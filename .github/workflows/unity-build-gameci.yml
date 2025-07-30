@@ -121,11 +121,24 @@ jobs:
           # Update the loader script to not expect compressed files
           cd ..
           if [ -f "LazyPortfolio.loader.js" ]; then
-            # Remove .br and .gz extensions from the loader
-            sed -i 's/\.br"/"/' LazyPortfolio.loader.js
-            sed -i 's/\.gz"/"/' LazyPortfolio.loader.js
-            sed -i 's/\.br,/,/' LazyPortfolio.loader.js
-            sed -i 's/\.gz,/,/' LazyPortfolio.loader.js
+            echo "Updating loader script to remove compression references..."
+            # Remove .br and .gz extensions from the loader more comprehensively
+            sed -i 's/\.br"//g' LazyPortfolio.loader.js
+            sed -i 's/\.gz"//g' LazyPortfolio.loader.js
+            sed -i 's/\.br,/,/g' LazyPortfolio.loader.js
+            sed -i 's/\.gz,/,/g' LazyPortfolio.loader.js
+            sed -i 's/\.br!/!/g' LazyPortfolio.loader.js
+            sed -i 's/\.gz!/!/g' LazyPortfolio.loader.js
+            
+            # Also update the index.html if it exists
+            if [ -f "index.html" ]; then
+              sed -i 's/\.br"//g' index.html
+              sed -i 's/\.gz"//g' index.html
+            fi
+            
+            # Debug: Check if replacements were made
+            echo "Checking for remaining .br references:"
+            grep -c "\.br" LazyPortfolio.loader.js || echo "No .br references found"
           fi
           
           cd ../../../
