@@ -68,11 +68,33 @@ jobs:
           # Install brotli if not already installed
           which brotli || sudo apt-get update && sudo apt-get install -y brotli
           
+          # Debug: Check current directory and permissions
+          echo "Current directory: $(pwd)"
+          echo "Contents of build directory:"
+          ls -la build/ || echo "build directory not found"
+          
+          # Check if the WebGL build exists
+          if [ ! -d "build/WebGL/LazyPortfolio/Build" ]; then
+            echo "WebGL build directory not found at expected location"
+            echo "Searching for Build directory:"
+            find build -name "Build" -type d 2>/dev/null || echo "No Build directory found"
+            exit 1
+          fi
+          
           # Navigate to build directory
           cd build/WebGL/LazyPortfolio/Build
           
-          # Create a temporary directory for decompressed files
-          mkdir -p decompressed
+          # Debug: Show current directory contents and permissions
+          echo "Current directory after cd: $(pwd)"
+          echo "Directory contents:"
+          ls -la
+          
+          # Create temporary directory with sudo if needed
+          if ! mkdir -p decompressed 2>/dev/null; then
+            echo "Failed to create directory with normal permissions, trying with sudo..."
+            sudo mkdir -p decompressed
+            sudo chmod 777 decompressed
+          fi
           
           # Decompress .br files
           for file in *.br; do
@@ -94,9 +116,10 @@ jobs:
           
           # Move decompressed files back, removing compressed versions
           if [ -d "decompressed" ] && [ "$(ls -A decompressed)" ]; then
-            mv decompressed/* .
-            rm -rf decompressed
-            rm -f *.br *.gz
+            # Use sudo if needed for file operations
+            sudo mv decompressed/* . || mv decompressed/* .
+            sudo rm -rf decompressed || rm -rf decompressed
+            sudo rm -f *.br *.gz || rm -f *.br *.gz
           fi
           
           # Update the loader script to not expect compressed files
