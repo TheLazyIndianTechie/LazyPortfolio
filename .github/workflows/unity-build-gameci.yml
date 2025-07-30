@@ -21,6 +21,8 @@ jobs:
         targetPlatform:
           - StandaloneWindows64
           - WebGL
+          - Android
+          - iOS
     
     steps:
       - name: Checkout repository
